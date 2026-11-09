@@ -30,7 +30,39 @@ Sprite_obj = {}
 Time = 0
 
 -- Functions
+local jump = function(cfg)
+    if Jumping then return end
+    Jumping = true
+    local t = 0
+    local h = 0
+    while true do
+        h = u.height(initial_velocity, gravity, t)
+        local gravity = -500 * cfg.tick_rate
+        local max_height = 150
+        local initial_velocity = u.initial_velocity(0, gravity, max_height)
+        print(math.max(0, h))
+        u.print_sprite(math.max(0, h))
+        t = t + cfg.tick_rate / 1000
+        waywall.sleep(cfg.tick_rate)
+        if h < 0 then break end
+    end
+    Jumping = false
+end
 
+local run = function(cfg, level)
+    local level_text = u.level_text(level)
+    if Leveling then return end
+    Leveling = true
+    local t = 0
+    while true do
+        local d = t * 50 * cfg.tick_rate
+        if d > 100000 then break end
+        t = t + cfg.tick_rate / 1000
+        u.print_level(level_text, d - 500)
+        waywall.sleep(cfg.tick_rate)
+    end
+    Leveling = false
+end
 
 -- APIs
 M.start_game = function()
@@ -49,32 +81,11 @@ M.setup = function(config, cfg)
     -- print(u.level_text(level))
 
     config.actions["L"] = function()
-        if Jumping then return end
-        Jumping = true
-        local t = 0
-        while true do
-            local h = u.height(2500, -10000, t)
-            if h < 0 then break end
-            t = t + cfg.tick_rate / 1000
-            u.print_sprite(h)
-            waywall.sleep(cfg.tick_rate)
-        end
-        Jumping = false
+        jump(cfg)
     end
 
     config.actions["K"] = function()
-        local level_text = u.level_text(level)
-        if Leveling then return end
-        Leveling = true
-        local t = 0
-        while true do
-            local d = t * 1000
-            if d > 100000 then break end
-            t = t + cfg.tick_rate / 1000
-            u.print_level(level_text, d)
-            waywall.sleep(cfg.tick_rate)
-        end
-        Leveling = false
+        run(cfg, level)
     end
 end
 
