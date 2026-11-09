@@ -34,12 +34,11 @@ local jump = function(cfg)
     if Jumping then return end
     Jumping = true
     local t = 0
-    local h = 0
     while true do
-        h = u.height(initial_velocity, gravity, t)
         local gravity = -500 * cfg.tick_rate
         local max_height = 150
         local initial_velocity = u.initial_velocity(0, gravity, max_height)
+        local h = u.height(initial_velocity, gravity, t)
         print(math.max(0, h))
         u.print_sprite(math.max(0, h))
         t = t + cfg.tick_rate / 1000
