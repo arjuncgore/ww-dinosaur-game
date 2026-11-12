@@ -52,11 +52,40 @@ M.generate_level = function(seed)
     return level
 end
 
-M.level_text = function(level)
+M.print_object = function(obj, distance, cfg)
+    if obj ~= nil then
+        obj:close()
+        obj = nil
+    end
+    distance = distance or 0
+    cfg = cfg or cur_cfg
+    obj = waywall.text(cfg.obstacle_sprite,
+        { x = cfg.x - distance, y = cfg.y, color = cfg.colors.obstacles, size = cfg.size })
+end
+
+local test_obstacle = {
+    idx = 1,      -- 1, 2, 3, 4
+    release = 19, -- tick to release at
+    obj = nil,    -- waywall text object
+}
+
+M.run_object = function(obstacle, cfg)
+    local t = 0
+    while true do
+        local d = t * 50 * cfg.tick_rate
+        if d > 100000 then break end
+        t = t + cfg.tick_rate / 1000
+        M.print_object(obstacle.obj, d - 500)
+        waywall.sleep(cfg.tick_rate)
+    end
+    Leveling = false
+end
+
+M.level_text = function(level, cfg)
     local level_copy = {}
     for k, v in ipairs(level) do
         if v == 0 then
-            level_copy[k] = "_"
+            level_copy[k] = cfg.obstacle_sprite
         elseif v == 1 then
             level_copy[k] = "O"
         end
@@ -64,17 +93,5 @@ M.level_text = function(level)
     return table.concat(level_copy, "")
 end
 
-local level_obj = nil
-M.print_level = function(level_text, distance, cfg)
-    level_text = level_text or ""
-    distance = distance or 0
-    cfg = cfg or cur_cfg
-    if level_obj ~= nil then
-        level_obj:close()
-        level_obj = nil
-    end
-    level_obj = waywall.text(level_text,
-        { x = cfg.x - distance, y = cfg.y, color = cfg.colors.obstacles, size = cfg.size })
-end
 
 return M
