@@ -2,20 +2,18 @@ local waywall = require("waywall")
 
 local M = {}
 
-local cur_cfg = {}
-M.set_cfg = function(cfg)
-    cur_cfg = cfg
+M.clear = function(obj)
+    if obj ~= nil then
+        obj:close()
+    end
+    return nil
 end
 
 
 local sprite_obj = nil
 M.print_sprite = function(height, cfg)
     height = height or 0
-    cfg = cfg or cur_cfg
-    if sprite_obj ~= nil then
-        sprite_obj:close()
-        sprite_obj = nil
-    end
+    sprite_obj = M.clear(sprite_obj)
     sprite_obj = waywall.text(cfg.player_sprite,
         { x = cfg.x, y = cfg.y - height, color = cfg.colors.player, size = cfg.size })
 end
@@ -51,47 +49,5 @@ M.generate_level = function(seed)
 
     return level
 end
-
-M.print_object = function(obj, distance, cfg)
-    if obj ~= nil then
-        obj:close()
-        obj = nil
-    end
-    distance = distance or 0
-    cfg = cfg or cur_cfg
-    obj = waywall.text(cfg.obstacle_sprite,
-        { x = cfg.x - distance, y = cfg.y, color = cfg.colors.obstacles, size = cfg.size })
-end
-
-local test_obstacle = {
-    idx = 1,      -- 1, 2, 3, 4
-    release = 19, -- tick to release at
-    obj = nil,    -- waywall text object
-}
-
-M.run_object = function(obstacle, cfg)
-    local t = 0
-    while true do
-        local d = t * 50 * cfg.tick_rate
-        if d > 100000 then break end
-        t = t + cfg.tick_rate / 1000
-        M.print_object(obstacle.obj, d - 500)
-        waywall.sleep(cfg.tick_rate)
-    end
-    Leveling = false
-end
-
-M.level_text = function(level, cfg)
-    local level_copy = {}
-    for k, v in ipairs(level) do
-        if v == 0 then
-            level_copy[k] = cfg.obstacle_sprite
-        elseif v == 1 then
-            level_copy[k] = "O"
-        end
-    end
-    return table.concat(level_copy, "")
-end
-
 
 return M
