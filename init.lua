@@ -19,47 +19,75 @@
 local waywall = require("waywall")
 local M = {}
 local u = require("ww-dinosaur-game.utils")
+local r = require("ww-dinosaur-game.run")
 
 -- Consts
 
 -- Vars
 Jumping = false
 Leveling = false
-Player_Position = { y = 0, }
-Sprite_obj = {}
-Time = 0
+Falling = false
+Player_y = 0
+START_X = 2000
+STOP_X = 300
+SPEED = 1000
+TILE_WIDTH = 0
+BUFFER = 50
+local jump_id = 0
 
 -- Functions
 local jump = function(cfg)
-    if Jumping then return end
+    local gravity = -500 * cfg.tick_rate
+    local max_height = 150
+    local initial_velocity = u.initial_velocity(0, gravity, max_height)
+    local t_highest = initial_velocity / -gravity
+
+    if Jumping and not (Falling and Player_y < BUFFER) then return end
+
+    jump_id = jump_id + 1
+    local cur_id = jump_id
     Jumping = true
+    Falling = false
+    if cfg.jump_hook then
+        cfg.jump_hook()
+    end
+
     local t = 0
     while true do
-        local gravity = -500 * cfg.tick_rate
-        local max_height = 150
-        local initial_velocity = u.initial_velocity(0, gravity, max_height)
-        local h = u.height(initial_velocity, gravity, t)
-        print(math.max(0, h))
-        u.print_sprite(math.max(0, h))
+        Player_y = u.height(initial_velocity, gravity, t)
+        Falling = t > t_highest
+        u.print_sprite(math.max(0, Player_y), cfg)
         t = t + cfg.tick_rate / 1000
         waywall.sleep(cfg.tick_rate)
-        if h < 0 then break end
+        if cur_id ~= jump_id then
+            return
+        end
+        if Player_y < 0 then
+            break
+        end
     end
+
+    Player_y = 0
+    Falling = false
     Jumping = false
 end
 
 local run = function(cfg, level)
-    local level_text = u.level_text(level)
     if Leveling then return end
     Leveling = true
-    local t = 0
+    r.object_setup(cfg, level)
+
+    local start = waywall.current_time()
     while true do
-        local d = t * 50 * cfg.tick_rate
-        if d > 100000 then break end
-        t = t + cfg.tick_rate / 1000
-        u.print_level(level_text, d - 500)
+        local time = (waywall.current_time() - start) / 1000
+        local run = r.handle_run(time, cfg)
+        if not run then
+            break
+        end
         waywall.sleep(cfg.tick_rate)
     end
+
+    r.clear_all()
     Leveling = false
 end
 
@@ -74,13 +102,13 @@ M.game_running = function()
 end
 
 M.setup = function(config, cfg)
-    u.set_cfg(cfg)
+    TILE_WIDTH = cfg.size * 8 * #cfg.obstacles_sprite
 
     local level = u.generate_level(cfg.seed)
-    -- print(u.level_text(level))
 
-    config.actions["L"] = function()
+    config.actions[cfg.jump_key] = function()
         jump(cfg)
+        return not cfg.passthrough
     end
 
     config.actions["K"] = function()

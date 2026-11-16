@@ -2,20 +2,18 @@ local waywall = require("waywall")
 
 local M = {}
 
-local cur_cfg = {}
-M.set_cfg = function(cfg)
-    cur_cfg = cfg
+M.clear = function(obj)
+    if obj ~= nil then
+        obj:close()
+    end
+    return nil
 end
 
 
 local sprite_obj = nil
 M.print_sprite = function(height, cfg)
     height = height or 0
-    cfg = cfg or cur_cfg
-    if sprite_obj ~= nil then
-        sprite_obj:close()
-        sprite_obj = nil
-    end
+    sprite_obj = M.clear(sprite_obj)
     sprite_obj = waywall.text(cfg.player_sprite,
         { x = cfg.x, y = cfg.y - height, color = cfg.colors.player, size = cfg.size })
 end
@@ -50,31 +48,6 @@ M.generate_level = function(seed)
     end
 
     return level
-end
-
-M.level_text = function(level)
-    local level_copy = {}
-    for k, v in ipairs(level) do
-        if v == 0 then
-            level_copy[k] = "_"
-        elseif v == 1 then
-            level_copy[k] = "O"
-        end
-    end
-    return table.concat(level_copy, "")
-end
-
-local level_obj = nil
-M.print_level = function(level_text, distance, cfg)
-    level_text = level_text or ""
-    distance = distance or 0
-    cfg = cfg or cur_cfg
-    if level_obj ~= nil then
-        level_obj:close()
-        level_obj = nil
-    end
-    level_obj = waywall.text(level_text,
-        { x = cfg.x - distance, y = cfg.y, color = cfg.colors.obstacles, size = cfg.size })
 end
 
 return M
