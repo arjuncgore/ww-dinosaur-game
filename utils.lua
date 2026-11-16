@@ -18,6 +18,10 @@ M.print_sprite = function(height, cfg)
         { x = cfg.x, y = cfg.y - height, color = cfg.colors.player, size = cfg.size })
 end
 
+M.clear_sprite = function()
+    sprite_obj = M.clear(sprite_obj)
+end
+
 M.height = function(u, a, t)
     return u * t + (1 / 2) * a * t * t
 end
@@ -48,6 +52,17 @@ M.generate_level = function(seed)
     end
 
     return level
+end
+
+M.collided = function(obstacle_x, cfg)
+    local player_width = PLAYER_WIDTH
+    local obstacle_width = OBSTACLE_WIDTH
+
+    if (obstacle_x > cfg.x + player_width) or (obstacle_x + obstacle_width < cfg.x) then
+        return false
+    end
+
+    return (Player_y <= TILE_HEIGHT)
 end
 
 return M

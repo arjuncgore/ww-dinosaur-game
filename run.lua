@@ -7,7 +7,7 @@ local obstacles = {}
 
 M.object_setup = function(cfg, level)
     obstacles = {}
-    local tile_time = TILE_WIDTH / SPEED
+    local tile_time = OBSTACLE_WIDTH / SPEED
     for k, v in ipairs(level) do
         if v == 1 then
             table.insert(obstacles, { release = (k - 1) * tile_time, obj = nil })
@@ -34,12 +34,21 @@ M.handle_run = function(time, cfg)
         if x then
             obstacle.obj = waywall.text(cfg.obstacles_sprite,
                 { x = math.floor(x), y = cfg.y, color = cfg.colors.obstacles, size = cfg.size })
+            if u.collided(x, cfg) then
+                return "lose"
+            end
         end
+
         if x or time < obstacle.release then
             remaining = true
         end
     end
-    return remaining
+
+    if remaining then
+        return "continue"
+    else
+        return "win"
+    end
 end
 
 M.clear_all = function()

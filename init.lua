@@ -25,13 +25,15 @@ local r = require("ww-dinosaur-game.run")
 
 -- Vars
 Jumping = false
-Leveling = false
+Running = false
 Falling = false
 Player_y = 0
 START_X = 2000
 STOP_X = 300
 SPEED = 1000
-TILE_WIDTH = 0
+PLAYER_WIDTH = 8
+OBSTACLE_WIDTH = 8
+TILE_HEIGHT = 10
 BUFFER = 50
 local jump_id = 0
 
@@ -73,22 +75,27 @@ local jump = function(cfg)
 end
 
 local run = function(cfg, level)
-    if Leveling then return end
-    Leveling = true
+    if Running then return end
+    Running = true
     r.object_setup(cfg, level)
-
+    u.print_sprite(0, cfg)
     local start = waywall.current_time()
+
+    local run_status
     while true do
         local time = (waywall.current_time() - start) / 1000
-        local run = r.handle_run(time, cfg)
-        if not run then
+        run_status = r.handle_run(time, cfg)
+        if run_status ~= "continue" then
             break
         end
         waywall.sleep(cfg.tick_rate)
     end
 
+    -- handle run_status
+
     r.clear_all()
-    Leveling = false
+    u.clear_sprite()
+    Running = false
 end
 
 -- APIs
@@ -102,7 +109,9 @@ M.game_running = function()
 end
 
 M.setup = function(config, cfg)
-    TILE_WIDTH = cfg.size * 8 * #cfg.obstacles_sprite
+    PLAYER_WIDTH = cfg.size * (8 * #cfg.player_sprite - 2)
+    OBSTACLE_WIDTH = cfg.size * (8 * #cfg.obstacles_sprite - 2)
+    TILE_HEIGHT = cfg.size * 10
 
     local level = u.generate_level(cfg.seed)
 
